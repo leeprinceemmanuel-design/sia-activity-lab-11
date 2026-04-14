@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies Web Search</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.css@8.5.0/themes/satellite-min.css">
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .container { display: flex; max-width: 1200px; margin: 0 auto; gap: 30px; }
+        .sidebar { width: 250px; flex-shrink: 0; }
+        .main-content { flex-grow: 1; }
+        .hit-movie { display: flex; gap: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .hit-poster { width: 120px; height: auto; object-fit: cover; border-radius: 4px; }
+        .hit-info h3 { margin: 0 0 10px 0; color: #333; }
+        .hit-meta { font-size: 0.9em; color: #666; margin-bottom: 10px; }
+        .hit-overview { font-size: 0.95em; color: #444; line-height: 1.5; }
+        #searchbox { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>Filter by Genre</h3>
+            <div id="genre-list"></div>
+        </div>
+
+        <div class="main-content">
+            <div id="searchbox"></div>
+            <div id="hits"></div>
+            <div id="pagination" style="margin-top: 20px; display: flex; justify-content: center;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.24.0/dist/algoliasearch-lite.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.64.3/dist/instantsearch.production.min.js"></script>
+
+    <script>
+        // Initialize client with your Application ID and PUBLIC Search API Key
+        const searchClient = algoliasearch('OQL1HSCT1I', '766cc6959a03f6c13600e24d3a4587d2');
+
+        const search = instantsearch({
+            indexName: 'index', // UPDATED to match your Algolia dashboard
+            searchClient,
+        });
+
+        search.addWidgets([
+            // 1. Search Box Widget
+            instantsearch.widgets.searchBox({
+                container: '#searchbox',
+                placeholder: 'Search for movies...',
+            }),
+
+            // 2. Hits (Results) Widget
+            instantsearch.widgets.hits({
+                container: '#hits',
+                templates: {
+                    item(hit, { html, components }) {
+                        return html`
+                            <article class="hit-movie">
+                                <img src="${hit.poster_url}" alt="${hit.title}" class="hit-poster" onerror="this.src='https://via.placeholder.com/120x180?text=No+Poster'" />
+                                <div class="hit-info">
+                                    <h3>${components.Highlight({ hit, attribute: 'title' })}</h3>
+                                    <div class="hit-meta">
+                                        <strong>Genre:</strong> ${hit.genre} | 
+                                        <strong>Rating:</strong> ⭐ ${hit.vote_average}
+                                    </div>
+                                    <p class="hit-overview">${hit.overview}</p>
+                                </div>
+                            </article>
+                        `;
+                    },
+                },
+            }),
+
+            // 3. Faceting / Filtering Widget
+            instantsearch.widgets.refinementList({
+                container: '#genre-list',
+                attribute: 'genre',
+            }),
+
+            // 4. Pagination Widget
+            instantsearch.widgets.pagination({
+                container: '#pagination',
+            })
+        ]);
+
+        search.start();
+    </script>
+</body>
+</html>
